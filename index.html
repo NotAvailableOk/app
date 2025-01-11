@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Image Gallery</title>
+    <!-- Adding FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Previous styles remain the same until .button-container */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(25, 25, 25, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #00ccff 0%, #0066ff 100%);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .image-container {
+            margin-top: 20px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: all 0.3s ease;
+            border-radius: 15px;
+        }
+
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .image-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .heart-icon {
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .heart-icon.liked {
+            color: #ff0055;
+            animation: heartPop 0.3s ease;
+        }
+
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .favorites-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #ff0088 #2d2d2d;
+        }
+
+        .thumbnail-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-info{
+            display: none;
+        }
+
+        .remove-favorite {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .thumbnail-container:hover .remove-favorite {
+            opacity: 1;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .generate-btn {
+            background: linear-gradient(45deg, #ff0055 0%, #ff0088 100%);
+            color: white;
+        }
+
+        .first{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @media (max-width: 600px) {
+            .button-container {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+
+            .image-info {
+                padding: 10px 15px;
+            }
+
+            .stats {
+                gap: 10px;
+                font-size: 0.9em;
+            }
+            
+        }
+
+
+        /* Adding password overlay styles */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .password-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .password-container h2 {
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+        }
+
+        .password-input:focus {
+            box-shadow: 0 0 10px rgba(255, 0, 136, 0.5);
+        }
+
+        .unlock-btn {
+            background: linear-gradient(45deg, #ff0055 0%, #ff0088 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 136, 0.3);
+        }
+
+        .password-error {
+            color: #ff4757;
+            margin-top: 10px;
+            display: none;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <!-- Password Overlay -->
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-container">
+            <h2>Enter Password to Continue</h2>
+            <input type="password" class="password-input" id="passwordInput" placeholder="Enter password">
+            <div class="password-error" id="passwordError">Incorrect password!</div>
+            <button class="unlock-btn" onclick="checkPassword()">Unlock Gallery</button>
+        </div>
+    </div>
+
+
+    <div class="container">
+        <h2>Premium Gallery</h2>
+        <div class="image-container">
+            <div class="loading">Loading...</div>
+            <img id="randomImage" src="" alt="Gallery image">
+        </div>
+        <div class="image-info">
+            <div class="stats">
+                <div class="stat">ID: <span class="image-number"></span></div>
+                <div class="stat">Views: <span id="viewCount">0</span></div>
+                <i class="fas fa-heart heart-ico" onclick="toggleFavorite()"></i>
+            </div>
+        </div>
+        <div class="button-container">
+            <div class="first">
+            <button onclick="loadRandomImage()" class="generate-btn">Next Image</button>
+            <i class="fas fa-heart heart-icon" onclick="toggleFavorite()"></i>
+        </div>
+            <button  onclick="downloadImage()" >Save Image</button>
+        </div>
+        <div class="favorites-container" id="favorites"></div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Add these at the start of your script
+        const CORRECT_PASSWORD = '#goddes-gallery';
+        let isAuthenticated = false;
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            const overlay = document.getElementById('passwordOverlay');
+
+            if (input.value === CORRECT_PASSWORD) {
+                isAuthenticated = true;
+                overlay.style.display = 'none';
+                sessionStorage.setItem('authenticated', 'true');
+                error.style.display = 'none';
+                input.value = '';
+            } else {
+                error.style.display = 'block';
+                input.value = '';
+            }
+        }
+
+        // Handle tab visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                if (sessionStorage.getItem('authenticated') !== 'true') {
+                    document.getElementById('passwordOverlay').style.display = 'flex';
+                    isAuthenticated = false;
+                }
+            }
+        });
+
+        // Handle password input enter key
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Initialize password check
+        window.onload = function() {
+            if (sessionStorage.getItem('authenticated') !== 'true') {
+                document.getElementById('passwordOverlay').style.display = 'flex';
+            } else {
+                document.getElementById('passwordOverlay').style.display = 'none';
+                isAuthenticated = true;
+            }
+            loadRandomImage();
+            updateFavorites();
+        };
+
+        
+        let currentImageNumber = 0;
+        let viewCount = 0;
+        
+        // Load favorites from localStorage
+        let favorites = new Set(JSON.parse(localStorage.getItem('favorites')) || []);
+        
+        function updateLocalStorage() {
+            localStorage.setItem('favorites', JSON.stringify([...favorites]));
+        }
+
+        function toggleFavorite() {
+            const heartIcon = document.querySelector('.heart-icon');
+            
+            if (favorites.has(currentImageNumber)) {
+                favorites.delete(currentImageNumber);
+                heartIcon.classList.remove('liked');
+                showToast('Removed from favorites');
+            } else {
+                if (favorites.size >= 5) {
+                    showToast('Maximum 5 favorites allowed! Remove some to add more.');
+                    return;
+                }
+                favorites.add(currentImageNumber);
+                heartIcon.classList.add('liked');
+                showToast('Added to favorites');
+            }
+            
+            updateLocalStorage();
+            updateFavorites();
+        }
+
+        function removeFavorite(num) {
+            favorites.delete(num);
+            updateLocalStorage();
+            updateFavorites();
+            showToast('Removed from favorites');
+            
+            if (num === currentImageNumber) {
+                document.querySelector('.heart-icon').classList.remove('liked');
+            }
+        }
+
+        function updateFavorites() {
+            const container = document.getElementById('favorites');
+            container.innerHTML = '';
+            favorites.forEach(num => {
+                const thumbContainer = document.createElement('div');
+                thumbContainer.className = 'thumbnail-container';
+                
+                const img = document.createElement('img');
+                img.src = `https://goddes.vercel.app/img?img=${num}`;
+                img.className = 'thumbnail';
+                img.onclick = () => loadSpecificImage(num);
+                
+                const removeBtn = document.createElement('div');
+                removeBtn.className = 'remove-favorite';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeFavorite(num);
+                };
+                
+                thumbContainer.appendChild(img);
+                thumbContainer.appendChild(removeBtn);
+                container.appendChild(thumbContainer);
+            });
+        }
+
+        function loadSpecificImage(num) {
+            currentImageNumber = num;
+            const img = document.getElementById('randomImage');
+            img.src = `https://goddes.vercel.app/img?img=${num}`;
+            document.querySelector('.image-number').textContent = num;
+            document.querySelector('.heart-icon').classList.toggle('liked', favorites.has(num));
+            viewCount++;
+            document.getElementById('viewCount').textContent = viewCount;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        async function downloadImage() {
+            try {
+                const response = await fetch(document.getElementById('randomImage').src);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `premium-image-${currentImageNumber}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showToast('Image downloaded successfully!');
+            } catch (error) {
+                showToast('Download failed. Please try again.');
+            }
+        }
+
+        function loadRandomImage() {
+            const loading = document.querySelector('.loading');
+            const img = document.getElementById('randomImage');
+            currentImageNumber = Math.floor(Math.random() * 100) + 1;
+            
+            loading.style.display = 'block';
+            img.style.opacity = '0.5';
+            
+            img.src = `https://goddes.vercel.app/img?img=${currentImageNumber}`;
+            document.querySelector('.image-number').textContent = currentImageNumber;
+            document.querySelector('.heart-icon').classList.toggle('liked', favorites.has(currentImageNumber));
+            
+            viewCount++;
+            document.getElementById('viewCount').textContent = viewCount;
+            
+            img.onload = function() {
+                loading.style.display = 'none';
+                img.style.opacity = '1';
+            };
+            
+            img.onerror = function() {
+                loading.style.display = 'none';
+                img.style.opacity = '1';
+                showToast('Failed to load image. Please try again.');
+            };
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadRandomImage();
+            updateFavorites();
+        };
+    </script>
+</body>
+</html>
